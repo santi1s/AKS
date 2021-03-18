@@ -1,0 +1,136 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: goldpinger-serviceaccount
+  namespace: default
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: goldpinger-daemon
+  namespace: default
+  labels:
+    app: goldpinger
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: goldpinger
+  template:
+    metadata:
+      annotations:
+       prometheus.io/scrape: 'true'
+       prometheus.io/port: '8080'
+      labels:
+        app: goldpinger
+    spec:
+      hostNetwork: true
+      serviceAccountName: goldpinger-serviceaccount
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      volumes:
+      - name: kubeconfig
+        secret:
+          secretName: goldpinger-kubeconfig
+      containers:
+        - name: goldpinger
+          env:
+            - name: USE_HOST_IP
+              value: "true"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8080"
+            - name: REFRESH_INTERVAL
+              value: "60"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            # podIP is used to select a randomized subset of nodes to ping.
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: HOSTS_TO_RESOLVE
+              value: "1.1.1.1 8.8.8.8 www.bing.com"
+          image: "docker.io/bloomberg/goldpinger:v3.0.0"
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          resources:
+            limits:
+              memory: 80Mi
+            requests:
+              cpu: 1m
+              memory: 40Mi
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: goldpinger
+  namespace: default
+  labels:
+    app: goldpinger
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+      name: http
+  selector:
+    app: goldpinger
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: goldpinger-clusterrole
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - nodes
+      - deamonsets
+    verbs:
+      - list
+      - bind
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: goldpinger-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: goldpinger-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: goldpinger-serviceaccount
+    namespace: default
+    
+    
