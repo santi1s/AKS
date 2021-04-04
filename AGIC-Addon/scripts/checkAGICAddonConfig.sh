@@ -3,8 +3,14 @@
 
 # 
 # Bash script to check the configuration of cluster with AGIC Addon Enabled
-# Requires bash 4 and jq 
-#
+# It will 
+# - get the cluster config for the AGIC addon and also the configs stored in ingress-appgw-cm confimap in k8s
+# - check the AGIC clientappId role assignments in teh AppGw and in the AppGw ResourceGroup
+# Can be executed from client machine with Asure CLI , bash 4 and jq 
+# Can also be execute from the bash in cloud shell :
+#    wget https://raw.githubusercontent.com/santi1s/AKS/main/AGIC-Addon/scripts/checkAGICAddonConfig.sh
+#    bash checkAGICAddonConfig.sh -n <cluster> -g <cluster-resourcegroup>
+#   
 
 ## Prerequisites
 #check bash version
@@ -138,10 +144,10 @@ done
 
 echo -e "\nChecking values in configmap ingress-appgw-cm against values in cluster config:\n"
 if [ ${AGIC_CFG_ARRAY[APPGW_RESOURCE_ID]} != $CFGAPPGWRESID ]; then
-    echo -e "There is a mismatch betweem AppGwResourceId!!\n"
+    echo -e "There is a mismatch in AppGwResourceId!!\n"
 fi
 if [ ${AGIC_CFG_ARRAY[AZURE_CLIENT_ID]} != $CFGARMCLI_ID ]; then
-    echo -e "There is a mismatch betweem appId !!\n"
+    echo -e "There is a mismatch in appId !!\n"
 fi
 
 
