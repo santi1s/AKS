@@ -5,7 +5,7 @@ source 0_envvars.sh
 
 
 # Create CNI vNext 2nd Cluster 
-az network vnet subnet create -g $RG --vnet-name $VNET_NAME_CNIV2 --name $NODE_SUBNET_NAME_CNIV2_2 --address-prefixes 10.1.252.0/22 -o none
+az network vnet subnet create -g $RG --vnet-name $VNET_NAME_CNIV2 --name $NODE_SUBNET_NAME_CNIV2_2 --address-prefixes 10.2.252.0/22 -o none
 az aks create -n $CLUSTERNAME_CNIV2_2 \
 -g $RG \
 --max-pods 250 \
