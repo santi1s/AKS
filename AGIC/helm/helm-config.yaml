@@ -8,8 +8,8 @@ verbosityLevel: 5
 #
 appgw:
     subscriptionId: 5a26ef37-cf5a-444a-b287-99a8aca1a85b
-    resourceGroup: appgwdemo
-    name: AppGW1
+    resourceGroup: AGICIngress
+    name: aksagicingress-AppGw
     usePrivateIP: false
 
     # Setting appgw.shared to "true" will create an AzureIngressProhibitedTarget CRD.
@@ -33,8 +33,8 @@ appgw:
 # - Option 1: AAD-Pod-Identity (https://github.com/Azure/aad-pod-identity)
 armAuth:
     type: aadPodIdentity
-    identityResourceID: /subscriptions/5a26ef37-cf5a-444a-b287-99a8aca1a85b/resourcegroups/2103210040000358/providers/Microsoft.ManagedIdentity/userAssignedIdentities/agic_ingress
-    identityClientID:  94ff3ea5-4989-410c-91ec-dff9b4a2ed97
+    identityResourceID: /subscriptions/5a26ef37-cf5a-444a-b287-99a8aca1a85b/resourcegroups/AGICIngress/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aksagicingress-identity
+    identityClientID:  cf3c8a86-653f-4dce-bb4a-e08dbc43946c
 
 ## Alternatively you can use Service Principal credentials
 # armAuth:
@@ -45,3 +45,4 @@ armAuth:
 # Specify if the cluster is RBAC enabled or not
 rbac:
     enabled: true # true/false
+

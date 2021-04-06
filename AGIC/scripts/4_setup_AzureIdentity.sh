@@ -3,7 +3,49 @@ set -e
 # Load Env Vars
 source 0_envvars.sh
 
-echo -e "Setup aad-pod-identity...\n"
+echo -e "Creating User assigned identity $AGIC_IDENTITY in ResourceGroup $RG...\n"
+{ # try
+    (az identity create -g $RG -n $AGIC_IDENTITY 1>/dev/null 2>/tmp/error.txt)
+} || { # catch
+    if [ -f /tmp/error.txt ] ; then cat /tmp/error.txt ; rm -f /tmp/error.txt;fi
+    exit 1
+}
+
+echo -e "Getting clientId and identiyId for $AGIC_IDENTITY ...\n"
+{ # try
+    IDENT_CLI_ID=$(az identity show -g $RG -n $AGIC_IDENTITY -o tsv --query "clientId" 2>/tmp/error.txt)
+    echo -e "identityClientId:$IDENT_CLI_ID\n"
+} || { # catch
+    if [ -f /tmp/error.txt ] ; then cat /tmp/error.txt ; rm -f /tmp/error.txt;fi
+    exit 1
+}
+
+{ # try
+    IDENT_ID=$(az identity show -g $RG -n $AGIC_IDENTITY -o tsv --query "id" 2>/tmp/error.txt)
+    echo -e "identityId:$IDENT_ID\n"
+} || { # catch
+    if [ -f /tmp/error.txt ] ; then cat /tmp/error.txt ; rm -f /tmp/error.txt;fi
+    exit 1
+}
+
+
+
+
+if [ 0 -eq 1 ];then
+
+ az network application-gateway show -g AGICIngress -n aksagicingress-AppGw -o tsv --query id
+identityClientId:cf3c8a86-653f-4dce-bb4a-e08dbc43946c
+
+identityId:/subscriptions/5a26ef37-cf5a-444a-b287-99a8aca1a85b/resourcegroups/AGICIngress/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aksagicingress-identity
+az role assignment create \
+    --role "Contributor" \
+    --assignee cf3c8a86-653f-4dce-bb4a-e08dbc43946c \
+    --scope /subscriptions/5a26ef37-cf5a-444a-b287-99a8aca1a85b/resourceGroups/AGICIngress/providers/Microsoft.Network/applicationGateways/aksagicingress-AppGw
+
+az role assignment create \
+    --role "Reader" \
+    --assignee cf3c8a86-653f-4dce-bb4a-e08dbc43946c \
+    --scope /subscriptions/5a26ef37-cf5a-444a-b287-99a8aca1a85b/resourceGroups/AGICIngress
 #switch to cluster ctx
 { # try
     (kubectl config use-context $CLUSTERNAME >/dev/null 2>&1) && (echo -e "Switched to context:$CLUSTERNAME\n")
@@ -11,6 +53,13 @@ echo -e "Setup aad-pod-identity...\n"
     echo -e "Error getting context $CLUSTERNAME\n"
     exit 1
 }
+
+helm install ingress-azure \
+  --namespace kube-system \
+  -f helm-config.yaml \
+  application-gateway-kubernetes-ingress/ingress-azure \
+  --version 1.4.0
+
 
 { # try
     (echo -e "Installing aad-pod-identity using helm\n") && (helm > /dev/null 2>&1) &&  (version=$(helm version | awk -F"Version:" '{print $2}' | awk -F "," '{print $1}'))
@@ -51,3 +100,4 @@ echo -e "aad-pod-identity installed. Checking status...\n"
     if [ -f /tmp/error.txt ] ; then cat /tmp/error.txt ; rm -f /tmp/error.txt;fi
     exit 1
 }
+fi
