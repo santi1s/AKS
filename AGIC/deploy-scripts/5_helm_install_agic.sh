@@ -1,8 +1,8 @@
 #!/bin/bash
-set -e
+set -x
 # Load Env Vars
 source 0_envvars.sh
-if [ 0 -eq 1 ]; then
+
 #switch to cluster ctx
 { # try
     (kubectl config use-context $CLUSTERNAME >/dev/null 2>&1) && (echo -e "Switched to context:$CLUSTERNAME\n")
@@ -10,6 +10,7 @@ if [ 0 -eq 1 ]; then
     echo -e "Error getting context $CLUSTERNAME\n"
     exit 1
 }
+
 
 { # try
     (echo -e "Installing  application-gateway-kubernetes-ingress using helm\n") && (helm > /dev/null 2>&1) &&  (version=$(helm version | awk -F"Version:" '{print $2}' | awk -F "," '{print $1}'))
@@ -26,7 +27,6 @@ if [ 0 -eq 1 ]; then
     if [ -f /tmp/error.txt ] ; then cat /tmp/error.txt ; rm -f /tmp/error.txt;fi
     exit 1
 }
-fi
 
 echo -e "Downloading and configuring AGIC helm-config.yaml..."
 { # try
@@ -42,6 +42,7 @@ echo -e "Downloading and configuring AGIC helm-config.yaml..."
     exit 1
 }
 
+if [ 1 -eq 0 ]; then
 echo -e "Installing Helm chart application-gateway-kubernetes-ingress in kube-system namespace..."
 { # try
     helm install ingress-azure \
@@ -54,4 +55,4 @@ echo -e "Installing Helm chart application-gateway-kubernetes-ingress in kube-sy
     if [ -f /tmp/error.txt ] ; then cat /tmp/error.txt ; rm -f /tmp/error.txt;fi
     exit 1
 }
-
+fi 
