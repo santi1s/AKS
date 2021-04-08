@@ -1,4 +1,4 @@
 #!/bin/bash
-kubectl delete ingress aspnetapp
-kubectl delete service aspnetapp
-kubectl delete deployment aspnetapp
+
+source 
+az network application-gateway frontend-ip  show 
