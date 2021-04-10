@@ -1,4 +1,0 @@
-#!/bin/bash
-
-source 
-az network application-gateway frontend-ip  show 
