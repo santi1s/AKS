@@ -1,0 +1,1 @@
+ az network application-gateway http-listener list --resource-group AGICdemo --gateway-name aks-AppGw
