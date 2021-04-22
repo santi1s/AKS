@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#
+# deploy nginx pod in a given node
+#
 #Usage message
 usage()
 {
@@ -31,4 +34,27 @@ if [ -z "$1" ]; then
     else
         NODE=$1
     fi
- watch -n 1 kubectl get nnc $NODE -n kube-system  -o jsonpath={$.spec.requestedIPCount}
+RAND=$(echo $(( $RANDOM % 100)))
+
+cat <<EOF > /tmp/nginx.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-$RAND
+spec:
+  nodeName: $NODE
+  containers:
+  - image: nginx
+    name: nginx-$RAND
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+EOF
+
+if [ -f /tmp/nginx.yaml ] ; then
+    kubectl create -f /tmp/nginx.yaml > /dev/null 2>&1
+    echo "pod nginx-$RAND created in node $NODE"
+    rm -f /tmp/nginx.yaml
+else
+    echo "could not find spec nginx.yaml in /tmp"
+fi

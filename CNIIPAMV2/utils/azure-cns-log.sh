@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#
+# Get azure-cns pod logs for a given node
+#
 #Usage message
 usage()
 {

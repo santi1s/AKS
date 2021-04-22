@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: webserver1-ingress
+  annotations:
+    appgw.ingress.kubernetes.io/backend-path-prefix: /
+    appgw.ingress.kubernetes.io/backend-hostname: webserver1.internal.com
+    kubernetes.io/ingress.class: azure/application-gateway
+spec:
+  rules:
+  - host: webserver1.aks.com
+    http:
+      paths:
+      - path: /site1
+        backend:
+          serviceName: webserver1
+          servicePort: 8080

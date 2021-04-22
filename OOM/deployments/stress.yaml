@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stress
+  template:
+    metadata:
+      labels:
+        app: stress
+    spec:
+      containers:
+      - name: stress
+        image: ubuntu
+        imagePullPolicy: IfNotPresent
+        env:
+        command: ["/bin/bash"]
+        args: ["-c", "apt-get update; apt-get install stress -y;stress --vm 1 --vm-bytes 100M"]
+        resources:
+          limits: 
+            memory: 123Mi
+          requests:
+            memory: 100Mi
