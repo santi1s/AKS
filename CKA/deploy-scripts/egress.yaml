@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: azure-egress
+spec:
+  loadBalancerIP: 51.11.53.149
+  type: LoadBalancer
+  ports:
+  - port: 80
