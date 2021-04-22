@@ -80,22 +80,23 @@ spec:
 
 ---
 
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: nginx-ingress
-  annotations:
-    kubernetes.io/ingress.class: azure/application-gateway
+  name: fsia-frontend
 spec:
   tls:
     - hosts:
-      - nginx.portal.azure.com
+      - fsia-frontend.portal.azure.com
       secretName: nginx-tls-host
   rules:
-  - host: nginx.portal.azure.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: nginx
-          servicePort: 80
+    - host: fsia-frontend.portal.azure.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: nginx
+            servicePort: 80
+
+
+
