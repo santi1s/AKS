@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aspnetapp
+  labels:
+    app: aspnetapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aspnetapp
+  template:
+    metadata:
+      labels:
+        app: aspnetapp
+    spec:
+      containers:
+      - name: aspnetapp
+        image: mcr.microsoft.com/dotnet/core/samples:aspnetapp
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: aspnetapp
+  labels:
+    app: aspnetapp
+spec:
+  selector:
+    app: aspnetapp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: aspnetapp
+  labels:
+     app: aspnetapp
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: aspnetapp
+          servicePort: 80
+

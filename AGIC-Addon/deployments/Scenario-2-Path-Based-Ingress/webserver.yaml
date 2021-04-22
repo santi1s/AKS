@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webserver-nginx-cm
+  labels:
+    app: webserver
+data:
+  default.conf: |-
+    server {
+        listen 80;
+        root /usr/share/nginx/html;
+        index index.html;
+        location /site1 {
+          try_files $uri $uri/ =404;
+        }
+    }
+    server {
+        listen 80;
+        root /usr/share/nginx/html;
+        index index.html;
+        location /site2 {
+          try_files $uri $uri/ =404;
+        }
+    }
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webserver-site1
+  labels:
+    app: webserver
+data:
+  index.html: |-
+    <html>
+    <h1>Welcome to the Site1 with Nginx webserver.</h1>
+    </html>
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webserver-site2
+  labels:
+    app: webserver
+data:
+  index.html: |-
+    <html>
+    <h1>Welcome to the Site2 with Nginx webserver.</h1>
+    </html>
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webserver
+  labels:
+    app: webserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webserver
+  template:
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      containers:
+        - name: webserver
+          imagePullPolicy: IfNotPresent
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+          - mountPath: /etc/nginx/conf.d
+            name: configmap-volume
+          - mountPath: /usr/share/nginx/html/site1
+            name: configmap-site1
+          - mountPath: /usr/share/nginx/html/site2
+            name: configmap-site2
+      volumes:
+      - name: configmap-volume
+        configMap:
+          name: webserver-nginx-cm
+      - name: configmap-site1
+        configMap:
+          name: webserver-site1
+      - name: configmap-site2
+        configMap:
+          name: webserver-site2
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver
+  labels:
+    app: sebserver
+spec:
+  selector:
+    app: webserver
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: webserver
+  labels:
+     app: webserver
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /site1/
+        backend:
+          serviceName: webserver
+          servicePort: 80
+      - path: /site2/
+        backend:
+          serviceName: webserver
+          servicePort: 80
+

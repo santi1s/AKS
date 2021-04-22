@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ING_ADDON=$(kubectl get pods -n kube-system -l app=ingress-appgw | wc -l)
+ING_HELM=$(kubectl get pods -n kube-system -l app=ingress-azure | wc -l)
+
+
+if [ $ING_ADDON -ge 2 ]; then 
+    kubectl get pods -n kube-system -l app=ingress-appgw | tail -n 1 | xargs -n 1 kubectl logs -n kube-system -f
+elif [ $ING_HELM -ge 2 ]; then
+    kubectl get pods -n kube-system -l app=ingress-azure | tail -n 1 | xargs -n 1 kubectl logs -n kube-system -f
+fi
